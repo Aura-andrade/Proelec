@@ -10,16 +10,13 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/userRoutes.js');
 app.use('/usuarios', userRoutes);
 
 // Conexión a la base de datos
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB conectado'))
-.catch((error) => console.error('Error conectando a MongoDB:', error));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB conectado'))
+  .catch((error) => console.error('Error conectando a MongoDB:', error));
 
 // Puerto del servidor
 const PORT = process.env.PORT || 3000;

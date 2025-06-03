@@ -4,5 +4,9 @@ const { crearUsuario } = require('../controllers/userController');
 
 // Ruta para registrar un nuevo usuario
 router.post('/', crearUsuario);
-
 module.exports = router;
+
+
+
+
+

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const usuarioSchema = new mongoose.Schema({
   identificacion: {
-    type: String,
+    type: Number,
     required: true,
     unique: true
   },
@@ -28,10 +28,21 @@ const usuarioSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  proyectosAsignados: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Proyecto'  // Más adelante se crea este modelo
-  }]
+  // proyectosAsignados:cuando cree el modulo de proyectos pasa a: mongoose.Schema.Types.ObjectId, // ref: 'Proyecto'  // Más adelante se crea este modelo
+  
+  proyectosAsignados: {
+  type: [String], // array de strings
+  default: []
+},
+  contraseña: {
+    type: String,
+    required: true,
+    select: false // para que no se incluya por defecto al hacer consultas
+  },
+  primerInicio:{
+    type: Boolean,
+    default: true // Para saber si ya cambió su contraseña por defecto
+    },
 }, {
   timestamps: true
 });

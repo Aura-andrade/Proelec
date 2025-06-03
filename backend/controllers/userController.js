@@ -1,7 +1,22 @@
 const Usuario = require('../models/User'); // Importamos el modelo
+const bcrypt = require('bcryptjs');
+const enviarCorreo = require('../utils/emailSender');
+
 
 // Función para registrar un nuevo usuario
+
+const generarContraseña = () => {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let contraseña = '';
+  for (let i = 0; i < 10; i++) {
+    contraseña += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return contraseña;
+};
+
 const crearUsuario = async (req, res) => {
+
+  console.log(req.body); // TEMPORAL: para verificar los datos
   try {
     const {
       identificacion,
@@ -34,6 +49,13 @@ const crearUsuario = async (req, res) => {
       return res.status(400).json({ mensaje: 'correo ya registrado.' });
     }
 
+    const contraseñaGenerada = generarContraseña();
+
+    console.log("Contraseña generada para el nuevo usuario:", contraseñaGenerada); // se puede eliminar en producción
+
+    const contraseñaEncriptada = await bcrypt.hash(contraseñaGenerada, 10);
+
+
     // Crear el usuario
     const nuevoUsuario = new Usuario({
       identificacion,
@@ -42,12 +64,27 @@ const crearUsuario = async (req, res) => {
       correo,
       rol,
       estado,
-      proyectosAsignados
+      proyectosAsignados,
+      contraseña: contraseñaEncriptada
     });
 
-    await nuevoUsuario.save(); // Guardar en MongoDB
+    await nuevoUsuario.save();
 
-    res.status(201).json({ mensaje: 'Usuario registrado con éxito.' });
+// Enviar correo con la contraseña generada
+    await enviarCorreo(
+  correo,
+  'Acceso al sistema ProElec',
+  `
+  <p>Hola ${nombreCompleto},</p>
+  <p>Tu cuenta en el sistema <strong>ProElec</strong> ha sido creada exitosamente.</p>
+  <p>Tu contraseña temporal es:</p>
+  <h3>${contraseñaGenerada}</h3>
+  <p>Por favor, inicia sesión y cámbiala al primer ingreso.</p>
+  <p>Gracias,<br>Equipo de desarrollo ProElec</p>
+  `
+);
+
+return res.status(201).json({ mensaje: "Usuario creado con éxito. La contraseña ha sido enviada por correo." });
 
   } catch (error) {
     console.error(error);
@@ -56,3 +93,4 @@ const crearUsuario = async (req, res) => {
 };
 
 module.exports = { crearUsuario };
+
