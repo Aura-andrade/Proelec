@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const usuarioSchema = new mongoose.Schema({
   identificacion: {
-    type: Number,
+    type: String,
     required: true,
     unique: true
   },
