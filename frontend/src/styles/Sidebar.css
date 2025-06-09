@@ -1,0 +1,106 @@
+/* Estilos del sidebar */
+.sidebar {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100vh;
+  background-color: #162941;
+  color: white;
+  padding-top: 0;
+  transition: width 0.3s ease;
+  overflow-y: auto; /* Permite scroll si el contenido es mayor que la altura */
+  z-index: 999;
+  overflow-x: hidden;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  font-size: 1rem;
+  color: white;
+  background: inherit;
+  min-height: 35px; /* Fija la altura mínima igual al logo */
+}
+
+.sidebar-logo img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+}
+
+.sidebar-logo-top {
+  position: static;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* Si está cerrado */
+.sidebar.closed {
+  width: 60px;
+}
+
+.sidebar.closed .sidebar-logo {
+  padding-left: 12px;
+  padding-right: 12px;
+  justify-content: flex-start;
+}
+
+/* Lista de navegación */
+.sidebar .menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar .menu li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar .menu li:hover {
+  background-color: #D7AA18;
+  color: black;
+  font-weight: bold;
+}
+
+.sidebar .menu li span {
+  transition: opacity 0.3s;
+}
+
+/* Oculta el texto si está cerrado */
+.sidebar.closed .menu li span {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar.closed .sidebar-logo p {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.3s, width 0.3s;
+}
+
+.sidebar.closed .menu li {
+  pointer-events: none;
+  cursor: default;
+  background: none !important;
+}
+
+.sidebar.closed .menu li:hover {
+  background-color: inherit;
+  color: inherit;
+}
+
+body {
+  overflow-x: hidden;
+}
