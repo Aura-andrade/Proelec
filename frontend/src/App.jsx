@@ -1,20 +1,15 @@
-import { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import ListadoUsuarios from "./pages/usuarios/ListadoUsuarios";
+import Header from "./components/Header";
+import Usuarios from "./pages/Usuarios/Usuarios";
 import './App.css';
 
 function App() {
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarAbierto(!sidebarAbierto);
-  };
-
   return (
     <div className="app-container">
-      <Sidebar abierto={sidebarAbierto} setAbierto={setSidebarAbierto} toggleSidebar={toggleSidebar} />
-      <main className={`contenido-principal ${sidebarAbierto ? '' : 'expandido'}`}>
-        <ListadoUsuarios />
+      <Sidebar />
+      <main className="main">
+        <Header titulo="Módulo de Usuarios" onBuscar={(valor) => setTerminoBusqueda(valor)} />
+        <Usuarios />
       </main>
     </div>
   );

@@ -1,17 +1,36 @@
-/* App.css */
 .app-container {
   display: flex;
+  width: 100vw;
   height: 100vh;
 }
 
-.contenido-principal {
-  flex-grow: 1;
-  padding: 20px;
-  margin-left: 200px; /* cuando sidebar está abierto */
-  transition: margin-left 0.3s ease;
-  background-color: #f1f1f1;
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
 }
 
-.contenido-principal.expandido {
-  margin-left: 60px; /* cuando sidebar está cerrado */
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f6f6f6;
+  padding: 0;
+  margin-left: 200px; /* ancho del sidebar */
+}
+
+.usuarios-container {
+  width: 100%;
+  max-width: calc(100vw - 400px); /* 200px margen izquierdo + 200px margen derecho */
+  margin: 0 auto;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f6f6f6;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
