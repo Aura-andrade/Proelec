@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Rutas
 const userRoutes = require('./routes/userRoutes.js');
-app.use('/usuarios', userRoutes);
+app.use('/api/usuarios', userRoutes);
 
 // Conexión a la base de datos
 mongoose.connect(process.env.MONGO_URI)

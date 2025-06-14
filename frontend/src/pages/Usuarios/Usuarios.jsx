@@ -1,101 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/Usuarios.css';
-import Header from '../../components/Header';
 import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import { SlUserFollow } from "react-icons/sl";
 import { BiSortAlt2 } from "react-icons/bi";
-import api from '../../api/axios'; // Asegúrate que este archivo exista
+import api from '../../api/axios';
+import FormularioUsuario from '../../components/FormularioUsuario';
 
 const USUARIOS_POR_PAGINA = 10;
 
-const Usuarios = () => {
-  const [usuarios, setUsuarios] = useState([]); // Estado para usuarios reales
+const Usuarios = ({ terminoBusqueda }) => {
+  const [usuarios, setUsuarios] = useState([]);
   const [pagina, setPagina] = useState(1);
+  const [columnaOrden, setColumnaOrden] = useState(null);
+  const [ordenAscendente, setOrdenAscendente] = useState(true);
+  const [filtroRol, setFiltroRol] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  const [columnaOrden, setColumnaOrden] = useState(null); // nombreCompleto, rol, estado
-const [ordenAscendente, setOrdenAscendente] = useState(true);
+  // Función para recargar usuarios desde el backend
+  const cargarUsuarios = async () => {
+    try {
+      const respuesta = await api.get('/usuarios');
+      setUsuarios(respuesta.data.usuarios || []);
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error);
+    }
+  };
 
-const [terminoBusqueda, setTerminoBusqueda] = useState('');
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
 
-// 1. Filtrar por término de búsqueda
-const usuariosFiltrados = usuarios.filter(usuario =>
-  usuario.nombreCompleto.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
-  usuario.identificacion.toLowerCase().includes(terminoBusqueda.toLowerCase())
-);
-
-// 2. Ordenar si hay columna seleccionada
-const usuariosOrdenados = [...usuariosFiltrados];
-if (columnaOrden) {
-  usuariosOrdenados.sort((a, b) => {
-    const valorA = a[columnaOrden]?.toString().toLowerCase() || '';
-    const valorB = b[columnaOrden]?.toString().toLowerCase() || '';
-    if (valorA < valorB) return ordenAscendente ? -1 : 1;
-    if (valorA > valorB) return ordenAscendente ? 1 : -1;
-    return 0;
+  // Filtrado por búsqueda, rol y estado
+  const usuariosFiltrados = usuarios.filter((usuario) => {
+    const coincideBusqueda =
+      usuario.nombreCompleto.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
+      usuario.identificacion.toLowerCase().includes(terminoBusqueda.toLowerCase());
+    const coincideRol = filtroRol === '' || usuario.rol === filtroRol;
+    const coincideEstado = filtroEstado === '' || usuario.estado === (filtroEstado === 'true');
+    return coincideBusqueda && coincideRol && coincideEstado;
   });
-}
 
-// 3. Calcular total de páginas con los datos filtrados
-const totalPaginas = Math.ceil(usuariosOrdenados.length / USUARIOS_POR_PAGINA);
+  // Ordenamiento
+  const usuariosOrdenados = [...usuariosFiltrados];
+  if (columnaOrden) {
+    usuariosOrdenados.sort((a, b) => {
+      const valorA = a[columnaOrden]?.toString().toLowerCase() || '';
+      const valorB = b[columnaOrden]?.toString().toLowerCase() || '';
+      if (valorA < valorB) return ordenAscendente ? -1 : 1;
+      if (valorA > valorB) return ordenAscendente ? 1 : -1;
+      return 0;
+    });
+  }
 
-// 4. Aplicar paginación
-const usuariosPagina = usuariosOrdenados.slice(
-  (pagina - 1) * USUARIOS_POR_PAGINA,
-  pagina * USUARIOS_POR_PAGINA
-);
+  // Paginación
+  const totalPaginas = Math.ceil(usuariosOrdenados.length / USUARIOS_POR_PAGINA);
+  const usuariosPagina = usuariosOrdenados.slice(
+    (pagina - 1) * USUARIOS_POR_PAGINA,
+    pagina * USUARIOS_POR_PAGINA
+  );
 
   const handleAnterior = () => {
     if (pagina > 1) setPagina(pagina - 1);
   };
 
   const handleSiguiente = () => {
-    if (pagina < totalPaginas) setPagina(pagina + 1);
+    if (pagina * USUARIOS_POR_PAGINA < usuarios.length) setPagina(pagina + 1);
   };
 
-  // Cargar los usuarios desde el backend al montar el componente
-  useEffect(() => {
-    const obtenerUsuarios = async () => {
-      try {
-        const respuesta = await api.get('/usuarios'); // Debes tener esta ruta en tu backend
-        setUsuarios(respuesta.data.usuarios || []); // Ajusta si tu backend devuelve otro formato
-      } catch (error) {
-        console.error('Error al obtener usuarios:', error);
-      }
-    };
-
-    obtenerUsuarios();
-  }, []);
-
   const manejarOrden = (columna) => {
-  if (columna === columnaOrden) {
-    // Si ya está ordenando por esta columna, invertimos el orden
-    setOrdenAscendente(!ordenAscendente);
-  } else {
-    // Si es una columna nueva, la establecemos y por defecto ascendente
-    setColumnaOrden(columna);
-    setOrdenAscendente(true);
-  }
-};
-
+    if (columna === columnaOrden) {
+      setOrdenAscendente(!ordenAscendente);
+    } else {
+      setColumnaOrden(columna);
+      setOrdenAscendente(true);
+    }
+  };
 
   return (
     <div className="usuarios-container">
-  
       {/* Controles superiores */}
       <div className="controles-usuarios">
-        <select>
+        <select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}>
           <option value="">todos los roles</option>
           <option value="Administrador">Administrador</option>
           <option value="Coord. Admon">Coord. Admon</option>
-          <option value="Ejecutor">Ejecutor de obra</option>
+          <option value="Ejecutor de obra">Ejecutor de obra</option>
         </select>
-        <select>
+        <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
           <option value="">todos los estados</option>
           <option value="true">Activo</option>
           <option value="false">Inactivo</option>
         </select>
-        <button className="btn-crear"><SlUserFollow />  Crear Usuario</button>
+        <button className="btn-crear" onClick={() => setMostrarFormulario(true)}>
+          <SlUserFollow /> Crear Usuario
+        </button>
       </div>
 
       {/* Tabla de usuarios */}
@@ -144,12 +144,22 @@ const usuariosPagina = usuariosOrdenados.slice(
           <span style={{ margin: "0 12px" }}>
             {Math.min(pagina * USUARIOS_POR_PAGINA, usuarios.length)} de {usuarios.length}
           </span>
-
-          <button onClick={handleSiguiente} disabled={pagina === totalPaginas}>
+          <button onClick={handleSiguiente} disabled={pagina * USUARIOS_POR_PAGINA >= usuarios.length}>
             Siguiente &raquo;
           </button>
         </div>
       </div>
+
+      {/* Formulario Modal */}
+      {mostrarFormulario && (
+        <FormularioUsuario
+          onClose={() => setMostrarFormulario(false)}
+          onUsuarioCreado={() => {
+            cargarUsuarios();
+            setMostrarFormulario(false);
+          }}
+        />
+      )}
     </div>
   );
 };
