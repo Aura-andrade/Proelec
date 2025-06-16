@@ -15,8 +15,6 @@ const generarContraseña = () => {
 };
 
 const crearUsuario = async (req, res) => {
-
-  console.log(req.body); // TEMPORAL: para verificar los datos
   try {
     const {
       identificacion,
@@ -28,25 +26,32 @@ const crearUsuario = async (req, res) => {
       proyectosAsignados
     } = req.body;
 
-    // Verificar campos obligatorios
-    if (
-      !identificacion || !nombreCompleto || !cargo ||
-      !correo || !rol || typeof estado === 'undefined' ||
-      !proyectosAsignados || proyectosAsignados.length === 0
-    ) {
-      return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
+    const errores = {};
+
+    // Validar campos obligatorios
+    if (!identificacion) errores.identificacion = 'La identificación es obligatoria.';
+    if (!nombreCompleto) errores.nombreCompleto = 'El nombre completo es obligatorio.';
+    if (!cargo) errores.cargo = 'El cargo es obligatorio.';
+    if (!correo) errores.correo = 'El correo es obligatorio.';
+    if (!rol) errores.rol = 'El rol es obligatorio.';
+    if (typeof estado === 'undefined') errores.estado = 'El estado es obligatorio.';
+    if (!proyectosAsignados || proyectosAsignados.length === 0) errores.proyectosAsignados = 'Debe asignar al menos un proyecto.';
+
+    // Validar si el ID ya existe (solo si se ingresó)
+    if (identificacion) {
+      const existeID = await Usuario.findOne({ identificacion });
+      if (existeID) errores.identificacion = 'La identificación ya fue registrada.';
     }
 
-    // Verificar si el ID ya existe
-    const existeID = await Usuario.findOne({ identificacion });
-    if (existeID) {
-      return res.status(400).json({ mensaje: 'ID ya fue registrado.' });
+    // Validar si el correo ya existe (solo si se ingresó)
+    if (correo) {
+      const existeCorreo = await Usuario.findOne({ correo });
+      if (existeCorreo) errores.correo = 'El correo ya fue registrado.';
     }
 
-    // Verificar si el correo ya existe
-    const existeCorreo = await Usuario.findOne({ correo });
-    if (existeCorreo) {
-      return res.status(400).json({ mensaje: 'correo ya registrado.' });
+    // SOLO aquí retornas si hay errores
+    if (Object.keys(errores).length > 0) {
+      return res.status(400).json({ errores });
     }
 
     const contraseñaGenerada = generarContraseña();

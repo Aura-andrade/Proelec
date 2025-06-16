@@ -1,0 +1,67 @@
+.modal-alerta-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-alerta {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px #999;
+  text-align: center;
+  min-width: 300px;
+}
+
+.mensaje-success {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.mensaje-error {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.mensaje-confirmar {
+  color: #162941;
+  font-weight: bold;
+}
+
+.botones-alerta {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-si {
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+}
+
+.btn-no {
+  background-color: #e57373;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+}
+
+.btn-cerrar {
+  background-color: #162941;
+  color: white;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+}

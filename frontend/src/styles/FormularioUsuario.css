@@ -2,9 +2,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(22, 41, 65, 0.5);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,58 +15,91 @@
   background: #fff;
   padding: 30px;
   border-radius: 10px;
-  width: 400px;
+  width: 420px;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
 }
 
-.modal-formulario h3 {
-  margin-bottom: 20px;
+.titulo-modal {
+  text-align: center;
+  font-size: 1.4rem;
   color: #162941;
+  margin-bottom: 20px;
 }
 
-.modal-formulario form {
-  display: flex;
-  flex-direction: column;
+.formulario-usuario .campo {
+  margin-bottom: 15px;
 }
 
-.modal-formulario label {
+.formulario-usuario label {
+  display: block;
   margin-bottom: 5px;
+  color: #162941;
   font-weight: bold;
 }
 
-.modal-formulario input,
-.modal-formulario select {
-  margin-bottom: 15px;
+.formulario-usuario input,
+.formulario-usuario select {
+  width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
   border-radius: 5px;
+  border: 1px solid #ccc; /* Neutro */
+  box-sizing: border-box;
 }
 
-.botones-formulario {
+.input-error {
+  border: 2px solid red !important;
+}
+
+.input-ok {
+  border: 2px solid green !important;
+}
+
+.requerido {
+  color: red;
+}
+
+.mensaje {
+  color: red;
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.leyenda-requeridos {
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+  color: #555;
+}
+
+.acciones-formulario {
   display: flex;
   justify-content: space-between;
+  margin-top: 20px;
 }
 
 .btn-guardar {
   background-color: #162941;
-  color: #fff;
+  color: white;
+  padding: 8px 16px;
   border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-cancelar {
-  background-color: #ccc;
-  color: #000;
+  background-color: #999;
+  color: white;
+  padding: 8px 16px;
   border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.mensaje {
-  margin-top: 15px;
-  font-weight: bold;
-  color: #d8000c;
+.error-label {
+  color: red;
+  font-weight: normal;
+  font-size: 12px;
+  margin-left: 8px;
 }
