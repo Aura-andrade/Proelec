@@ -4,8 +4,8 @@ import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import { SlUserFollow } from "react-icons/sl";
 import { BiSortAlt2 } from "react-icons/bi";
-import api from '../../api/axios';
 
+import api from '../../api/axios';
 import FormularioUsuario from '../../components/FormularioUsuario';
 import EditarUsuario from '../../components/EditarUsuario';
 import AlertaModal from '../../components/AlertaModal';
@@ -21,9 +21,9 @@ const Usuarios = ({ terminoBusqueda }) => {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [usuarioEditar, setUsuarioEditar] = useState(null);
-
   const [alerta, setAlerta] = useState(null); // { mensaje, tipo, onConfirmar, onCancelar }
 
+  // Cargar usuarios
   const cargarUsuarios = async () => {
     try {
       const respuesta = await api.get('/usuarios');
@@ -37,21 +37,26 @@ const Usuarios = ({ terminoBusqueda }) => {
     cargarUsuarios();
   }, []);
 
+  // Función para mostrar alertas
   const mostrarAlerta = ({ mensaje, tipo = 'info', onConfirmar = null, onCancelar = null }) => {
     setAlerta({ mensaje, tipo, onConfirmar, onCancelar });
   };
 
   const cerrarAlerta = () => setAlerta(null);
 
+  // Filtros
   const usuariosFiltrados = usuarios.filter((usuario) => {
     const coincideBusqueda =
       usuario.nombreCompleto.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
       usuario.identificacion.toLowerCase().includes(terminoBusqueda.toLowerCase());
+
     const coincideRol = filtroRol === '' || usuario.rol === filtroRol;
     const coincideEstado = filtroEstado === '' || usuario.estado === (filtroEstado === 'true');
+
     return coincideBusqueda && coincideRol && coincideEstado;
   });
 
+  // Ordenamiento
   const usuariosOrdenados = [...usuariosFiltrados];
   if (columnaOrden) {
     usuariosOrdenados.sort((a, b) => {
@@ -63,6 +68,7 @@ const Usuarios = ({ terminoBusqueda }) => {
     });
   }
 
+  // Paginación
   const totalPaginas = Math.ceil(usuariosOrdenados.length / USUARIOS_POR_PAGINA);
   const usuariosPagina = usuariosOrdenados.slice(
     (pagina - 1) * USUARIOS_POR_PAGINA,
@@ -78,6 +84,7 @@ const Usuarios = ({ terminoBusqueda }) => {
     }
   };
 
+  // Confirmación de eliminación
   const confirmarEliminar = (usuario) => {
     mostrarAlerta({
       mensaje: `¿Está seguro de eliminar a ${usuario.nombreCompleto}?`,
@@ -92,16 +99,23 @@ const Usuarios = ({ terminoBusqueda }) => {
       await api.delete(`/usuarios/${id}`);
       cargarUsuarios();
       cerrarAlerta();
-      mostrarAlerta({ mensaje: 'Usuario eliminado correctamente.', tipo: 'success' });
+      mostrarAlerta({
+        mensaje: 'Usuario eliminado correctamente.',
+        tipo: 'success'
+      });
     } catch (error) {
       console.error('Error al eliminar usuario:', error);
       cerrarAlerta();
-      mostrarAlerta({ mensaje: 'Error al eliminar usuario.', tipo: 'error' });
+      mostrarAlerta({
+        mensaje: 'Error al eliminar el usuario.',
+        tipo: 'error'
+      });
     }
   };
 
   return (
     <div className="usuarios-container">
+      {/* Controles superiores */}
       <div className="controles-usuarios">
         <select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}>
           <option value="">todos los roles</option>
@@ -109,16 +123,19 @@ const Usuarios = ({ terminoBusqueda }) => {
           <option value="Coord. Admon">Coord. Admon</option>
           <option value="Ejecutor de obra">Ejecutor de obra</option>
         </select>
+
         <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
           <option value="">todos los estados</option>
           <option value="true">Activo</option>
           <option value="false">Inactivo</option>
         </select>
+
         <button className="btn-crear" onClick={() => setMostrarFormulario(true)}>
           <SlUserFollow /> Crear Usuario
         </button>
       </div>
 
+      {/* Tabla de usuarios */}
       <table className="tabla-usuarios">
         <thead>
           <tr>
@@ -159,16 +176,20 @@ const Usuarios = ({ terminoBusqueda }) => {
         </tbody>
       </table>
 
+      {/* Paginación */}
       <div className="paginacion">
         <button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>
           &laquo; Anterior
         </button>
-        <span>{Math.min(pagina * USUARIOS_POR_PAGINA, usuarios.length)} de {usuarios.length}</span>
+        <span>
+          {Math.min(pagina * USUARIOS_POR_PAGINA, usuarios.length)} de {usuarios.length}
+        </span>
         <button onClick={() => setPagina(pagina + 1)} disabled={pagina * USUARIOS_POR_PAGINA >= usuarios.length}>
           Siguiente &raquo;
         </button>
       </div>
 
+      {/* Formulario modal */}
       {mostrarFormulario && (
         <FormularioUsuario
           onClose={() => setMostrarFormulario(false)}
@@ -183,6 +204,7 @@ const Usuarios = ({ terminoBusqueda }) => {
         />
       )}
 
+      {/* Modal de edición */}
       {usuarioEditar && (
         <EditarUsuario
           usuario={usuarioEditar}
@@ -190,11 +212,15 @@ const Usuarios = ({ terminoBusqueda }) => {
           onUsuarioActualizado={() => {
             cargarUsuarios();
             setUsuarioEditar(null);
-            mostrarAlerta({ mensaje: 'Usuario actualizado correctamente.', tipo: 'success' });
+            mostrarAlerta({
+              mensaje: 'Usuario actualizado correctamente.',
+              tipo: 'success'
+            });
           }}
         />
       )}
 
+      {/* Modal de alerta o confirmación */}
       {alerta && (
         <AlertaModal
           mensaje={alerta.mensaje}
