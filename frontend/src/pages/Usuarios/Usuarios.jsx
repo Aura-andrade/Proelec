@@ -9,6 +9,7 @@ import api from '../../api/axios';
 import FormularioUsuario from '../../components/FormularioUsuario';
 import EditarUsuario from '../../components/EditarUsuario';
 import AlertaModal from '../../components/AlertaModal';
+import { MENSAJES_ERROR, MENSAJES_EXITO, MENSAJES_CONFIRMACION } from '../../utils/mensajes';
 
 const USUARIOS_POR_PAGINA = 10;
 
@@ -21,15 +22,18 @@ const Usuarios = ({ terminoBusqueda }) => {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [usuarioEditar, setUsuarioEditar] = useState(null);
-  const [alerta, setAlerta] = useState(null); // { mensaje, tipo, onConfirmar, onCancelar }
+  const [alerta, setAlerta] = useState(null);
 
-  // Cargar usuarios
   const cargarUsuarios = async () => {
     try {
       const respuesta = await api.get('/usuarios');
       setUsuarios(respuesta.data.usuarios || []);
     } catch (error) {
       console.error('Error al obtener usuarios:', error);
+      mostrarAlerta({
+        mensaje: MENSAJES_ERROR.ERROR_GENERAL,
+        tipo: 'error'
+      });
     }
   };
 
@@ -37,14 +41,12 @@ const Usuarios = ({ terminoBusqueda }) => {
     cargarUsuarios();
   }, []);
 
-  // Función para mostrar alertas
   const mostrarAlerta = ({ mensaje, tipo = 'info', onConfirmar = null, onCancelar = null }) => {
     setAlerta({ mensaje, tipo, onConfirmar, onCancelar });
   };
 
   const cerrarAlerta = () => setAlerta(null);
 
-  // Filtros
   const usuariosFiltrados = usuarios.filter((usuario) => {
     const coincideBusqueda =
       usuario.nombreCompleto.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
@@ -56,7 +58,6 @@ const Usuarios = ({ terminoBusqueda }) => {
     return coincideBusqueda && coincideRol && coincideEstado;
   });
 
-  // Ordenamiento
   const usuariosOrdenados = [...usuariosFiltrados];
   if (columnaOrden) {
     usuariosOrdenados.sort((a, b) => {
@@ -68,7 +69,6 @@ const Usuarios = ({ terminoBusqueda }) => {
     });
   }
 
-  // Paginación
   const totalPaginas = Math.ceil(usuariosOrdenados.length / USUARIOS_POR_PAGINA);
   const usuariosPagina = usuariosOrdenados.slice(
     (pagina - 1) * USUARIOS_POR_PAGINA,
@@ -84,10 +84,9 @@ const Usuarios = ({ terminoBusqueda }) => {
     }
   };
 
-  // Confirmación de eliminación
   const confirmarEliminar = (usuario) => {
     mostrarAlerta({
-      mensaje: `¿Está seguro de eliminar a ${usuario.nombreCompleto}?`,
+      mensaje: MENSAJES_CONFIRMACION.ELIMINAR_USUARIO(usuario.nombreCompleto),
       tipo: 'confirmar',
       onConfirmar: () => eliminarUsuario(usuario._id),
       onCancelar: cerrarAlerta
@@ -100,14 +99,14 @@ const Usuarios = ({ terminoBusqueda }) => {
       cargarUsuarios();
       cerrarAlerta();
       mostrarAlerta({
-        mensaje: 'Usuario eliminado correctamente.',
+        mensaje: MENSAJES_EXITO.USUARIO_ELIMINADO,
         tipo: 'success'
       });
     } catch (error) {
       console.error('Error al eliminar usuario:', error);
       cerrarAlerta();
       mostrarAlerta({
-        mensaje: 'Error al eliminar el usuario.',
+        mensaje: MENSAJES_ERROR.ELIMINACION_FALLIDA,
         tipo: 'error'
       });
     }
@@ -115,7 +114,6 @@ const Usuarios = ({ terminoBusqueda }) => {
 
   return (
     <div className="usuarios-container">
-      {/* Controles superiores */}
       <div className="controles-usuarios">
         <select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}>
           <option value="">todos los roles</option>
@@ -135,7 +133,6 @@ const Usuarios = ({ terminoBusqueda }) => {
         </button>
       </div>
 
-      {/* Tabla de usuarios */}
       <table className="tabla-usuarios">
         <thead>
           <tr>
@@ -176,7 +173,6 @@ const Usuarios = ({ terminoBusqueda }) => {
         </tbody>
       </table>
 
-      {/* Paginación */}
       <div className="paginacion">
         <button onClick={() => setPagina(pagina - 1)} disabled={pagina === 1}>
           &laquo; Anterior
@@ -189,7 +185,6 @@ const Usuarios = ({ terminoBusqueda }) => {
         </button>
       </div>
 
-      {/* Formulario modal */}
       {mostrarFormulario && (
         <FormularioUsuario
           onClose={() => setMostrarFormulario(false)}
@@ -197,14 +192,13 @@ const Usuarios = ({ terminoBusqueda }) => {
             cargarUsuarios();
             setMostrarFormulario(false);
             mostrarAlerta({
-              mensaje: 'Usuario creado con éxito. La contraseña ha sido enviada por correo.',
+              mensaje: MENSAJES_EXITO.USUARIO_CREADO,
               tipo: 'success'
             });
           }}
         />
       )}
 
-      {/* Modal de edición */}
       {usuarioEditar && (
         <EditarUsuario
           usuario={usuarioEditar}
@@ -213,14 +207,13 @@ const Usuarios = ({ terminoBusqueda }) => {
             cargarUsuarios();
             setUsuarioEditar(null);
             mostrarAlerta({
-              mensaje: 'Usuario actualizado correctamente.',
+              mensaje: MENSAJES_EXITO.USUARIO_ACTUALIZADO,
               tipo: 'success'
             });
           }}
         />
       )}
 
-      {/* Modal de alerta o confirmación */}
       {alerta && (
         <AlertaModal
           mensaje={alerta.mensaje}

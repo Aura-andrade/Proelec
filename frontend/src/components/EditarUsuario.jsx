@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/FormularioUsuario.css';
 import api from '../api/axios';
+import { MENSAJES_ERROR, MENSAJES_EXITO } from '../utils/mensajes';
 
 const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
   const [formulario, setFormulario] = useState({
@@ -33,16 +34,16 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
   const validar = () => {
     const nuevosErrores = {};
 
-    if (!formulario.nombreCompleto) nuevosErrores.nombreCompleto = 'Campo obligatorio.';
-    if (!formulario.cargo) nuevosErrores.cargo = 'Campo obligatorio.';
+    if (!formulario.nombreCompleto) nuevosErrores.nombreCompleto = MENSAJES_ERROR.NOMBRE_OBLIGATORIO;
+    if (!formulario.cargo) nuevosErrores.cargo = MENSAJES_ERROR.CARGO_OBLIGATORIO;
     if (!formulario.correo) {
-      nuevosErrores.correo = 'Campo obligatorio.';
+      nuevosErrores.correo = MENSAJES_ERROR.CORREO_OBLIGATORIO;
     } else if (!validarCorreo(formulario.correo)) {
-      nuevosErrores.correo = 'Correo inválido.';
+      nuevosErrores.correo = MENSAJES_ERROR.CORREO_INVALIDO;
     }
-    if (!formulario.rol) nuevosErrores.rol = 'Campo obligatorio.';
-    if (!formulario.estado) nuevosErrores.estado = 'Campo obligatorio.';
-    if (!formulario.proyectosAsignados) nuevosErrores.proyectosAsignados = 'Campo obligatorio.';
+    if (!formulario.rol) nuevosErrores.rol = MENSAJES_ERROR.ROL_OBLIGATORIO;
+    if (!formulario.estado) nuevosErrores.estado = MENSAJES_ERROR.ESTADO_OBLIGATORIO;
+    if (!formulario.proyectosAsignados) nuevosErrores.proyectosAsignados = MENSAJES_ERROR.PROYECTOS_OBLIGATORIOS;
 
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
@@ -59,7 +60,7 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
     setMensaje('');
 
     if (!validar()) {
-      setMensaje('Por favor corrige los errores en los campos.');
+      setMensaje(MENSAJES_ERROR.ERRORES_DE_CAMPO);
       return;
     }
 
@@ -71,18 +72,18 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
       };
 
       const res = await api.put(`/usuarios/${usuario._id}`, usuarioActualizado);
-      setMensaje(res.data.mensaje || 'Usuario actualizado.');
+      setMensaje(res.data.mensaje || MENSAJES_EXITO.USUARIO_ACTUALIZADO);
       onUsuarioActualizado();
     } catch (error) {
       const msg = error.response?.data?.mensaje?.toLowerCase() || '';
       const nuevosErrores = {};
 
       if (msg.includes('correo')) {
-        nuevosErrores.correo = 'El correo ya está registrado por otro usuario.';
+        nuevosErrores.correo = MENSAJES_ERROR.CORREO_REPETIDO;
       }
 
       setErrores((prev) => ({ ...prev, ...nuevosErrores }));
-      setMensaje('Corrige los errores en los campos.');
+      setMensaje(MENSAJES_ERROR.ERRORES_DE_CAMPO);
     }
   };
 
@@ -94,48 +95,26 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
       <div className="modal-formulario">
         <h3 className="titulo-modal">Editar usuario</h3>
         <form onSubmit={handleSubmit} className="formulario-usuario">
-          {/* Nombre */}
-          <div className="campo">
-            <label>
-              Nombre completo <span className="requerido">*</span>
-              {errores.nombreCompleto && <span className="error-label"> {errores.nombreCompleto}</span>}
-            </label>
-            <input
-              name="nombreCompleto"
-              value={formulario.nombreCompleto}
-              onChange={handleChange}
-              className={inputClass('nombreCompleto')}
-            />
-          </div>
-
-          {/* Cargo */}
-          <div className="campo">
-            <label>
-              Cargo <span className="requerido">*</span>
-              {errores.cargo && <span className="error-label"> {errores.cargo}</span>}
-            </label>
-            <input
-              name="cargo"
-              value={formulario.cargo}
-              onChange={handleChange}
-              className={inputClass('cargo')}
-            />
-          </div>
-
-          {/* Correo */}
-          <div className="campo">
-            <label>
-              Correo electrónico <span className="requerido">*</span>
-              {errores.correo && <span className="error-label"> {errores.correo}</span>}
-            </label>
-            <input
-              name="correo"
-              type="email"
-              value={formulario.correo}
-              onChange={handleChange}
-              className={inputClass('correo')}
-            />
-          </div>
+          {[
+            { label: "Nombre completo", name: "nombreCompleto" },
+            { label: "Cargo", name: "cargo" },
+            { label: "Correo electrónico", name: "correo", type: "email" },
+            { label: "Proyectos asignados", name: "proyectosAsignados" }
+          ].map(({ label, name, type = "text" }) => (
+            <div className="campo" key={name}>
+              <label>
+                {label} <span className="requerido">*</span>
+                {errores[name] && <span className="error-label"> {errores[name]}</span>}
+              </label>
+              <input
+                name={name}
+                type={type}
+                value={formulario[name]}
+                onChange={handleChange}
+                className={inputClass(name)}
+              />
+            </div>
+          ))}
 
           {/* Rol */}
           <div className="campo">
@@ -171,20 +150,6 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
               <option value="true">Activo</option>
               <option value="false">Inactivo</option>
             </select>
-          </div>
-
-          {/* Proyecto */}
-          <div className="campo">
-            <label>
-              Proyectos asignados <span className="requerido">*</span>
-              {errores.proyectosAsignados && <span className="error-label"> {errores.proyectosAsignados}</span>}
-            </label>
-            <input
-              name="proyectosAsignados"
-              value={formulario.proyectosAsignados}
-              onChange={handleChange}
-              className={inputClass('proyectosAsignados')}
-            />
           </div>
 
           {/* Mensaje */}
