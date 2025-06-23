@@ -2,18 +2,9 @@ const Usuario = require('../models/User');
 const bcrypt = require('bcryptjs');
 const enviarCorreo = require('../utils/emailSender');
 const MENSAJES = require('../utils/mensajes');
+const { generarCadenaAleatoria } = require('../utils/generador');
+const { validarContrasena } = require('../utils/validadores');
 
-// Función para generar una contraseña aleatoria
-const generarContraseña = () => {
-  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let contraseña = '';
-  for (let i = 0; i < 10; i++) {
-    contraseña += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-  }
-  return contraseña;
-};
-
-// Crear un nuevo usuario
 const crearUsuario = async (req, res) => {
   try {
     const {
@@ -28,13 +19,15 @@ const crearUsuario = async (req, res) => {
 
     const errores = {};
 
-    if (!identificacion) errores.identificacion = 'La identificación es obligatoria.';
-    if (!nombreCompleto) errores.nombreCompleto = 'El nombre completo es obligatorio.';
-    if (!cargo) errores.cargo = 'El cargo es obligatorio.';
-    if (!correo) errores.correo = 'El correo es obligatorio.';
-    if (!rol) errores.rol = 'El rol es obligatorio.';
-    if (typeof estado === 'undefined') errores.estado = 'El estado es obligatorio.';
-    if (!proyectosAsignados || proyectosAsignados.length === 0) errores.proyectosAsignados = 'Debe asignar al menos un proyecto.';
+    if (!identificacion) errores.identificacion = MENSAJES.USUARIO.ID_OBLIGATORIO;
+    if (!nombreCompleto) errores.nombreCompleto = MENSAJES.USUARIO.NOMBRE_OBLIGATORIO;
+    if (!cargo) errores.cargo = MENSAJES.USUARIO.CARGO_OBLIGATORIO;
+    if (!correo) errores.correo = MENSAJES.USUARIO.CORREO_OBLIGATORIO;
+    if (!rol) errores.rol = MENSAJES.USUARIO.ROL_OBLIGATORIO;
+    if (typeof estado === 'undefined') errores.estado = MENSAJES.USUARIO.ESTADO_OBLIGATORIO;
+    if (!proyectosAsignados || proyectosAsignados.length === 0) {
+      errores.proyectosAsignados = MENSAJES.USUARIO.PROYECTOS_OBLIGATORIOS;
+    }
 
     if (identificacion) {
       const existeID = await Usuario.findOne({ identificacion });
@@ -50,7 +43,16 @@ const crearUsuario = async (req, res) => {
       return res.status(400).json({ errores });
     }
 
-    const contraseñaGenerada = generarContraseña();
+    const contraseñaGenerada = generarCadenaAleatoria();
+
+    const erroresContrasena = validarContrasena(contraseñaGenerada);
+    if (erroresContrasena.length > 0) {
+      return res.status(400).json({
+        mensaje: MENSAJES.USUARIO.CONTRASENA_NO_SEGURA,
+        errores: erroresContrasena
+      });
+    }
+
     const contraseñaEncriptada = await bcrypt.hash(contraseñaGenerada, 10);
 
     const nuevoUsuario = new Usuario({
@@ -80,17 +82,15 @@ const crearUsuario = async (req, res) => {
     );
 
     return res.status(201).json({
-      mensaje: 'Usuario creado con éxito. La contraseña ha sido enviada por correo.'
+      mensaje: MENSAJES.USUARIO.CREADO
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_REGISTRO });
   }
 };
 
-// Consultar usuarios con filtros, paginación y búsqueda
-const consultarUsuarios = async (req, res) => {
+const listarUsuarios = async (req, res) => {
   try {
     const {
       busqueda = '',
@@ -131,14 +131,12 @@ const consultarUsuarios = async (req, res) => {
       totalPaginas: Math.ceil(total / limite),
       usuarios
     });
-
   } catch (error) {
     console.error('Error al consultar usuarios:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_LISTAR });
   }
 };
 
-// Autocompletar usuarios
 const autocompletarUsuarios = async (req, res) => {
   try {
     const termino = req.query.termino?.toString() || '';
@@ -159,14 +157,12 @@ const autocompletarUsuarios = async (req, res) => {
       .limit(10);
 
     res.json(usuarios);
-
   } catch (error) {
     console.error('Error en autocompletar:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_AUTOCOMPLETAR });
   }
 };
 
-// Editar usuario
 const editarUsuario = async (req, res) => {
   const { id } = req.params;
   const {
@@ -179,11 +175,7 @@ const editarUsuario = async (req, res) => {
   } = req.body;
 
   try {
-    if (
-      !nombreCompleto || !cargo || !correo ||
-      !rol || typeof estado === 'undefined' ||
-      !Array.isArray(proyectosAsignados) || proyectosAsignados.length === 0
-    ) {
+    if (!nombreCompleto || !cargo || !correo || !rol || typeof estado === 'undefined' || !Array.isArray(proyectosAsignados) || proyectosAsignados.length === 0) {
       return res.status(400).json({ mensaje: MENSAJES.USUARIO.CAMPOS_OBLIGATORIOS });
     }
 
@@ -208,22 +200,20 @@ const editarUsuario = async (req, res) => {
 
     await usuario.save();
 
-    res.json({ mensaje: 'Usuario actualizado correctamente.' });
-
+    res.json({ mensaje: MENSAJES.USUARIO.ACTUALIZADO });
   } catch (error) {
     console.error('Error al editar usuario:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_ACTUALIZACION });
   }
 };
 
-// Cambiar estado (habilitar/inhabilitar)
 const cambiarEstadoUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
 
     if (typeof estado === 'undefined') {
-      return res.status(400).json({ mensaje: 'Debe proporcionar el nuevo estado (true o false).' });
+      return res.status(400).json({ mensaje: MENSAJES.USUARIO.ESTADO_OBLIGATORIO });
     }
 
     const usuario = await Usuario.findById(id);
@@ -235,14 +225,12 @@ const cambiarEstadoUsuario = async (req, res) => {
     await usuario.save();
 
     res.json({ mensaje: MENSAJES.USUARIO.CAMBIO_ESTADO_OK(estado) });
-
   } catch (error) {
     console.error('Error al cambiar el estado:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_ESTADO });
   }
 };
 
-// Eliminar usuario
 const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -255,7 +243,6 @@ const eliminarUsuario = async (req, res) => {
     await Usuario.findByIdAndDelete(id);
 
     res.json({ mensaje: MENSAJES.USUARIO.ELIMINADO });
-
   } catch (error) {
     console.error('Error al eliminar usuario:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_ELIMINAR });
@@ -264,7 +251,7 @@ const eliminarUsuario = async (req, res) => {
 
 module.exports = {
   crearUsuario,
-  consultarUsuarios,
+  listarUsuarios,
   autocompletarUsuarios,
   editarUsuario,
   cambiarEstadoUsuario,

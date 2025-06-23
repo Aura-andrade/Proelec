@@ -40,10 +40,7 @@
   padding-bottom: 20px;
 }
 
-/* Si está cerrado */
-.sidebar.closed {
-  width: 60px;
-}
+
 
 .sidebar.closed .sidebar-logo {
   padding-left: 12px;

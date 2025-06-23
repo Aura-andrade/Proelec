@@ -55,7 +55,8 @@ const FormularioUsuario = ({ onClose, onUsuarioCreado }) => {
       const nuevoUsuario = {
         ...formulario,
         estado: formulario.estado === 'true',
-        proyectosAsignados: [formulario.proyectosAsignados]
+        proyectosAsignados: [formulario.proyectosAsignados],
+        requiereCambioContrasena: true
       };
 
       await api.post('/usuarios', nuevoUsuario);

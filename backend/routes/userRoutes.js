@@ -1,24 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const { 
-    crearUsuario, 
-    consultarUsuarios, 
-    editarUsuario,
-    cambiarEstadoUsuario,
-    eliminarUsuario
-    
+
+const {
+  crearUsuario,
+  listarUsuarios,
+  editarUsuario,
+  eliminarUsuario,
+  cambiarEstadoUsuario,
+  autocompletarUsuarios
 } = require('../controllers/userController');
 
+const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 
-router.post('/', crearUsuario); // Ruta para registrar un nuevo usuario
-router.get('/', consultarUsuarios); // Ruta para listar, filtrar, paginar usuarios
-router.put('/:id', editarUsuario); // Ruta para editar un usuario
-router.put('/estado/:id', cambiarEstadoUsuario); // Ruta para cambiar el estado del usuario (habilitado/deshabilitado)
-router.delete('/:id', eliminarUsuario); // Ruta para Elimina el usuario completamente
+// Crear usuario - solo para Administrador o Coordinador
+router.post('/', verificarToken, verificarRol('Administrador', 'Coordinador'), crearUsuario);
+
+// Obtener usuarios - acceso para todos los roles autenticados
+router.get('/', verificarToken, listarUsuarios);
+
+// Editar usuario
+router.put('/:id', verificarToken, verificarRol('Administrador', 'Coordinador'), editarUsuario);
+
+// Eliminar usuario
+router.delete('/:id', verificarToken, verificarRol('Administrador'), eliminarUsuario);
+
+// Cambiar estado (inhabilitar/reactivar)
+router.patch('/:id/estado', verificarToken, verificarRol('Administrador', 'Coordinador'), cambiarEstadoUsuario);
+
+// Autocompletar búsqueda
+router.get('/autocompletar/busqueda', verificarToken, autocompletarUsuarios);
+
 module.exports = router;
-
-
-
-
-
-
