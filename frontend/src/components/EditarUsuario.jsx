@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/FormularioUsuario.css';
 import api from '../api/axios';
 import { MENSAJES_ERROR, MENSAJES_EXITO } from '../utils/mensajes';
+import { validarFormularioEditarUsuario } from '../utils/validadores';
 
 const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
   const [formulario, setFormulario] = useState({
@@ -29,26 +30,6 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
     }
   }, [usuario]);
 
-  const validarCorreo = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-
-  const validar = () => {
-    const nuevosErrores = {};
-
-    if (!formulario.nombreCompleto) nuevosErrores.nombreCompleto = MENSAJES_ERROR.NOMBRE_OBLIGATORIO;
-    if (!formulario.cargo) nuevosErrores.cargo = MENSAJES_ERROR.CARGO_OBLIGATORIO;
-    if (!formulario.correo) {
-      nuevosErrores.correo = MENSAJES_ERROR.CORREO_OBLIGATORIO;
-    } else if (!validarCorreo(formulario.correo)) {
-      nuevosErrores.correo = MENSAJES_ERROR.CORREO_INVALIDO;
-    }
-    if (!formulario.rol) nuevosErrores.rol = MENSAJES_ERROR.ROL_OBLIGATORIO;
-    if (!formulario.estado) nuevosErrores.estado = MENSAJES_ERROR.ESTADO_OBLIGATORIO;
-    if (!formulario.proyectosAsignados) nuevosErrores.proyectosAsignados = MENSAJES_ERROR.PROYECTOS_OBLIGATORIOS;
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormulario({ ...formulario, [name]: value });
@@ -59,7 +40,9 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
     e.preventDefault();
     setMensaje('');
 
-    if (!validar()) {
+    const nuevosErrores = validarFormularioEditarUsuario(formulario);
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
       setMensaje(MENSAJES_ERROR.ERRORES_DE_CAMPO);
       return;
     }
@@ -95,12 +78,10 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
       <div className="modal-formulario">
         <h3 className="titulo-modal">Editar usuario</h3>
         <form onSubmit={handleSubmit} className="formulario-usuario">
-          {[
-            { label: "Nombre completo", name: "nombreCompleto" },
-            { label: "Cargo", name: "cargo" },
-            { label: "Correo electrónico", name: "correo", type: "email" },
-            { label: "Proyectos asignados", name: "proyectosAsignados" }
-          ].map(({ label, name, type = "text" }) => (
+          {[{ label: 'Nombre completo', name: 'nombreCompleto' },
+            { label: 'Cargo', name: 'cargo' },
+            { label: 'Correo electrónico', name: 'correo', type: 'email' },
+            { label: 'Proyectos asignados', name: 'proyectosAsignados' }].map(({ label, name, type = 'text' }) => (
             <div className="campo" key={name}>
               <label>
                 {label} <span className="requerido">*</span>
@@ -116,7 +97,6 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
             </div>
           ))}
 
-          {/* Rol */}
           <div className="campo">
             <label>
               Rol <span className="requerido">*</span>
@@ -135,7 +115,6 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
             </select>
           </div>
 
-          {/* Estado */}
           <div className="campo">
             <label>
               Estado <span className="requerido">*</span>
@@ -152,10 +131,8 @@ const EditarUsuario = ({ usuario, onClose, onUsuarioActualizado }) => {
             </select>
           </div>
 
-          {/* Mensaje */}
           {mensaje && <p className="mensaje">{mensaje}</p>}
 
-          {/* Acciones */}
           <div className="acciones-formulario">
             <button type="submit" className="btn-guardar">Guardar cambios</button>
             <button type="button" className="btn-cancelar" onClick={onClose}>Cancelar</button>

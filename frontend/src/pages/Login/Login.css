@@ -250,3 +250,47 @@
   color: #555;
   margin-bottom: 1rem;
 }
+
+.requisitos-lista {
+  list-style: none;
+  padding-left: 0;
+  margin: 10px 0;
+}
+
+.requisitos-lista li {
+  font-size: 0.9rem;
+  margin: 4px 0;
+}
+
+.requisitos-lista .gris {
+  color: #888;
+}
+
+.requisitos-lista .no-cumplido {
+  color: #dc2626; /* rojo */
+}
+
+.requisitos-lista .cumplido {
+  color: #16a34a; /* verde */
+}
+
+.input-ok {
+  border: 2px solid #16a34a !important;
+}
+
+.input-error {
+  border: 2px solid #dc2626 !important;
+}
+
+.campo-password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icono-ojito {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #333;
+}

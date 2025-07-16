@@ -132,7 +132,7 @@ const listarUsuarios = async (req, res) => {
       usuarios
     });
   } catch (error) {
-    console.error('Error al consultar usuarios:', error);
+    console.error('Error al obtener usuarios:', error);
     res.status(500).json({ mensaje: MENSAJES.USUARIO.ERROR_LISTAR });
   }
 };
@@ -257,3 +257,4 @@ module.exports = {
   cambiarEstadoUsuario,
   eliminarUsuario
 };
+

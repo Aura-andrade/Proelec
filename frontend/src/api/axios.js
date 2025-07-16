@@ -16,17 +16,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores de respuesta (token expirado o inválido)
+// Interceptor para manejar respuestas con error (401 no autorizado)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Si el token expiró o no es válido, lo quitamos y redirigimos
+    const esLogin = error.config?.url?.includes('/auth/login');
+
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      window.location.pathname !== '/'
+    ) {
+      // Solo redirige si NO estás en el login
       localStorage.removeItem('token');
       localStorage.removeItem('rol');
       localStorage.removeItem('nombre');
-      window.location.href = '/'; // Redirige a login
+      window.location.href = '/';
     }
+
     return Promise.reject(error);
   }
 );

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import '../styles/FormularioUsuario.css';
 import api from '../api/axios';
 import AlertaModal from './AlertaModal';
-import { MENSAJES_ERROR, MENSAJES_EXITO } from '../utils/mensajes';
+import { MENSAJES_ERROR } from '../utils/mensajes';
+import { validarFormularioUsuario } from '../utils/validadores';
 
 const FormularioUsuario = ({ onClose, onUsuarioCreado }) => {
   const [formulario, setFormulario] = useState({
@@ -18,26 +19,6 @@ const FormularioUsuario = ({ onClose, onUsuarioCreado }) => {
   const [errores, setErrores] = useState({});
   const [alerta, setAlerta] = useState(null);
 
-  const validarCorreo = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-
-  const validar = () => {
-    const nuevosErrores = {};
-    if (!formulario.identificacion) nuevosErrores.identificacion = MENSAJES_ERROR.ID_OBLIGATORIO;
-    if (!formulario.nombreCompleto) nuevosErrores.nombreCompleto = MENSAJES_ERROR.NOMBRE_OBLIGATORIO;
-    if (!formulario.cargo) nuevosErrores.cargo = MENSAJES_ERROR.CARGO_OBLIGATORIO;
-    if (!formulario.correo) {
-      nuevosErrores.correo = MENSAJES_ERROR.CORREO_OBLIGATORIO;
-    } else if (!validarCorreo(formulario.correo)) {
-      nuevosErrores.correo = MENSAJES_ERROR.CORREO_INVALIDO;
-    }
-    if (!formulario.rol) nuevosErrores.rol = MENSAJES_ERROR.ROL_OBLIGATORIO;
-    if (!formulario.estado) nuevosErrores.estado = MENSAJES_ERROR.ESTADO_OBLIGATORIO;
-    if (!formulario.proyectosAsignados) nuevosErrores.proyectosAsignados = MENSAJES_ERROR.PROYECTOS_OBLIGATORIOS;
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormulario({ ...formulario, [name]: value });
@@ -46,7 +27,10 @@ const FormularioUsuario = ({ onClose, onUsuarioCreado }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validar()) {
+
+    const nuevosErrores = validarFormularioUsuario(formulario);
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
       setAlerta({ mensaje: MENSAJES_ERROR.CAMPOS_INCOMPLETOS, tipo: 'error' });
       return;
     }

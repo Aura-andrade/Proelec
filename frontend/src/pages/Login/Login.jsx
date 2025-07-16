@@ -1,72 +1,101 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from '../../assets/logo.png';
 import './Login.css';
-import { FaUserLock } from 'react-icons/fa';
+import { FaUserLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
-import RecuperarContrasenaModal from "./RecuperarContrasenaModal";
-import RestablecerContrasenaModal from "./RestablecerContrasenaModal";
-import NuevaContrasenaModal from "./NuevaContrasenaModal";
-import AlertaModal from '../../components/AlertaModal';
+
+import RecuperarContrasenaModal from './RecuperarContrasenaModal';
+import RestablecerContrasenaModal from './RestablecerContrasenaModal';
+import NuevaContrasenaModal from './NuevaContrasenaModal';
+
+import { MENSAJES_ERROR } from '../../utils/mensajes';
 
 const Login = () => {
   const [identificacion, setIdentificacion] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [recordarme, setRecordarme] = useState(false);
 
-  const [mostrarModalRecuperar, setMostrarModalRecuperar] = useState(false);
-  const [mostrarModalRestablecer, setMostrarModalRestablecer] = useState(false);
-  const [mostrarModalNueva, setMostrarModalNueva] = useState(false);
+  const [errorIdentificacion, setErrorIdentificacion] = useState('');
+  const [errorContrasena, setErrorContrasena] = useState('');
+
+  const [mostrarModal, setMostrarModal] = useState('');
   const [correoRecuperacion, setCorreoRecuperacion] = useState('');
-  const [alerta, setAlerta] = useState(null);
+  const [codigoVerificado, setCodigoVerificado] = useState('');
 
   const navigate = useNavigate();
 
-  const abrirModalRecuperar = () => {
-    setMostrarModalRecuperar(true);
-  };
-
-  const cerrarModales = () => {
-    setMostrarModalRecuperar(false);
-    setMostrarModalRestablecer(false);
-    setMostrarModalNueva(false);
-  };
-
-  const avanzarARestablecer = (correo) => {
-    setCorreoRecuperacion(correo);
-    setMostrarModalRecuperar(false);
-    setMostrarModalRestablecer(true);
-  };
-
-  const avanzarANueva = () => {
-    setMostrarModalRestablecer(false);
-    setMostrarModalNueva(true);
-  };
+  // ✅ Cargar identificación guardada si existía
+  useEffect(() => {
+    const identificacionGuardada = localStorage.getItem('recordarIdentificacion');
+    if (identificacionGuardada) {
+      setIdentificacion(identificacionGuardada);
+      setRecordarme(true);
+    }
+  }, []);
 
   const manejarLogin = async (e) => {
     e.preventDefault();
 
+    setErrorIdentificacion('');
+    setErrorContrasena('');
+
     if (!identificacion || !contrasena) {
-      setAlerta({ tipo: 'error', mensaje: 'Por favor, completa ambos campos.' });
+      if (!identificacion) setErrorIdentificacion(MENSAJES_ERROR.CAMPO_REQUERIDO);
+      if (!contrasena) setErrorContrasena(MENSAJES_ERROR.CAMPO_REQUERIDO);
       return;
     }
 
     try {
-      const response = await api.post('/auth/login', {
-        identificacion,
-        contrasena
-      });
+      const response = await api.post('/auth/login', { identificacion, contrasena });
 
-      // Guardar token y datos de usuario
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
+      localStorage.setItem('rol', response.data.rol);
+      localStorage.setItem(
+        'usuario',
+        JSON.stringify({
+          nombre: response.data.nombre,
+          rol: response.data.rol,
+          primerInicio: response.data.primerInicio,
+        })
+      );
 
-      // Redireccionar al módulo de usuarios
-      navigate('/usuarios');
+      // ✅ Guardar solo la identificación si se marcó "Recordarme"
+      if (recordarme) {
+        localStorage.setItem('recordarIdentificacion', identificacion);
+      } else {
+        localStorage.removeItem('recordarIdentificacion');
+      }
+
+      const rolesPermitidos = ['Administrador', 'Coord. Admon'];
+      if (rolesPermitidos.includes(response.data.rol)) {
+        navigate('/usuarios');
+      } else {
+        setErrorIdentificacion(MENSAJES_ERROR.ROL_NO_AUTORIZADO);
+      }
     } catch (error) {
-      const mensaje = error.response?.data?.mensaje || 'Error al iniciar sesión.';
-      setAlerta({ tipo: 'error', mensaje });
+      const mensaje = error.response?.data?.mensaje || '';
+      if (mensaje.includes('usuario no encontrado')) {
+        setErrorIdentificacion(MENSAJES_ERROR.USUARIO_NO_ENCONTRADO);
+      } else if (mensaje.includes('contraseña incorrecta')) {
+        setErrorContrasena(MENSAJES_ERROR.CONTRASENA_INCORRECTA);
+      } else {
+        setErrorContrasena(MENSAJES_ERROR.ERROR_LOGIN);
+      }
     }
+  };
+
+  const toggleMostrarContrasena = () => setMostrarContrasena(!mostrarContrasena);
+
+  const cerrarModales = () => setMostrarModal('');
+  const avanzarARestablecer = (correo) => {
+    setCorreoRecuperacion(correo);
+    setMostrarModal('restablecer');
+  };
+  const avanzarANueva = (codigo) => {
+    setCodigoVerificado(codigo);
+    setMostrarModal('nueva');
   };
 
   return (
@@ -80,24 +109,39 @@ const Login = () => {
       <div className="login-right">
         <form className="login-form" onSubmit={manejarLogin}>
           <FaUserLock className="icono-login" />
-          <h1>Iniciar Sesión</h1>
+          <h1>Iniciar sesión</h1>
 
           <div className="form-group">
-            <label>Identificación</label>
+            <label htmlFor="identificacion">Identificación</label>
             <input
+              id="identificacion"
+              name="identificacion"
               type="text"
               value={identificacion}
               onChange={(e) => setIdentificacion(e.target.value)}
+              className={errorIdentificacion ? 'input-error' : ''}
+              autoComplete="username"
             />
+            {errorIdentificacion && <p className="mensaje-error">{errorIdentificacion}</p>}
           </div>
 
           <div className="form-group">
-            <label>Contraseña</label>
-            <input
-              type="password"
-              value={contrasena}
-              onChange={(e) => setContrasena(e.target.value)}
-            />
+            <label htmlFor="contrasena">Contraseña</label>
+            <div className="campo-password">
+              <input
+                id="contrasena"
+                name="contrasena"
+                type={mostrarContrasena ? 'text' : 'password'}
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
+                className={errorContrasena ? 'input-error' : ''}
+                autoComplete="current-password"
+              />
+              <span className="icono-ojito" onClick={toggleMostrarContrasena}>
+                {mostrarContrasena ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+            {errorContrasena && <p className="mensaje-error">{errorContrasena}</p>}
           </div>
 
           <div className="form-group recordarme">
@@ -107,46 +151,34 @@ const Login = () => {
               onChange={(e) => setRecordarme(e.target.checked)}
               id="recordarme"
             />
-            <label htmlFor="recordarme">Re<span style={{ display: "none" }}>-</span>cordarme</label>
+            <label htmlFor="recordarme">Recordarme</label>
           </div>
 
           <button type="submit" className="btn-login">Ingresar</button>
 
           <div className="forgot-link">
-            <a href="#" onClick={abrirModalRecuperar}>¿Olvidaste tu contraseña?</a>
+            <a href="#" onClick={() => setMostrarModal('recuperar')}>
+              ¿Olvidaste tu contraseña?
+            </a>
           </div>
         </form>
       </div>
 
-      {/* Modales de recuperación de contraseña */}
-      {mostrarModalRecuperar && (
-        <RecuperarContrasenaModal
-          onClose={cerrarModales}
-          onCodigoEnviado={avanzarARestablecer}
-        />
+      {mostrarModal === 'recuperar' && (
+        <RecuperarContrasenaModal onClose={cerrarModales} onCodigoEnviado={avanzarARestablecer} />
       )}
-
-      {mostrarModalRestablecer && (
+      {mostrarModal === 'restablecer' && (
         <RestablecerContrasenaModal
           correo={correoRecuperacion}
           onClose={cerrarModales}
           onCodigoVerificado={avanzarANueva}
         />
       )}
-
-      {mostrarModalNueva && (
+      {mostrarModal === 'nueva' && (
         <NuevaContrasenaModal
           correo={correoRecuperacion}
+          codigo={codigoVerificado}
           onClose={cerrarModales}
-        />
-      )}
-
-      {/* Alerta de error */}
-      {alerta && (
-        <AlertaModal
-          tipo={alerta.tipo}
-          mensaje={alerta.mensaje}
-          onCerrar={() => setAlerta(null)}
         />
       )}
     </div>

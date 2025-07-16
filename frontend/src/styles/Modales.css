@@ -1,0 +1,191 @@
+/* === ESTRUCTURA GENERAL DE MODALES === */
+.modal-overlay,
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* === CONTENEDOR GENERAL DE MODAL === */
+.modal,
+.modal-formulario {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* === BOTÓN DE CIERRE (X) === */
+.cerrar-modal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #162941;
+  cursor: pointer;
+}
+
+/* === TITULOS Y DESCRIPCIONES === */
+.titulo-modal {
+  text-align: center;
+  font-size: 1.4rem;
+  color: #162941;
+  margin-bottom: 20px;
+}
+
+.descripcion-modal,
+.ayuda-modal {
+  text-align: center;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.mensaje-error {
+  color: red;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.mensaje-exito {
+  color: #2e7d32;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+/* === CAMPOS INPUT GENERALES === */
+.modal input,
+.modal-formulario input,
+.modal-formulario select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+/* === BOTÓN CENTRADO PARA MODALES DE RECUPERACIÓN === */
+.btn-enviar {
+  background-color: #1e40af;
+  color: white;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.btn-enviar:hover {
+  background-color: #1b3a99;
+}
+
+/* === BOTONES DE ACCIÓN PARA FORMULARIOS === */
+.acciones-formulario {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-guardar {
+  background-color: #162941;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* === VALIDACIÓN === */
+.input-error {
+  border: 2px solid red !important;
+}
+
+.input-ok {
+  border: 2px solid green !important;
+}
+
+.error-label {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: -0.4rem;
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
+.requerido {
+  color: red;
+}
+
+.leyenda-requeridos {
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+  color: #555;
+}
+
+.modal-formulario label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: #162941;
+  font-weight: 500;
+}
+
+/* === Reglas de seguridad para contraseña === */
+.reglas-seguridad {
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #555;
+  list-style: none;
+  padding-left: 0;
+}
+
+.reglas-seguridad li {
+  margin-bottom: 0.2rem;
+}
+
+.reglas-seguridad li span {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 40px; /* deja espacio para el icono */
+}
+
+.icono-ojito {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #555;
+  font-size: 1.1rem;
+}
+
+

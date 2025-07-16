@@ -6,27 +6,27 @@ const enviarCorreo = require('../utils/emailSender');
 const MENSAJES = require('../utils/mensajes');
 const { generarCadenaAleatoria } = require('../utils/generador');
 
-// LOGIN por identificación
+// LOGIN
 const login = async (req, res) => {
   try {
     const { identificacion, contrasena } = req.body;
 
     if (!identificacion || !contrasena) {
-      return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
+      return res.status(400).json({ mensaje: MENSAJES.USUARIO.CAMPOS_OBLIGATORIOS });
     }
 
     const usuario = await Usuario.findOne({ identificacion }).select('+contraseña');
     if (!usuario) {
-      return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+      return res.status(404).json({ mensaje: MENSAJES.AUTH.USUARIO_NO_ENCONTRADO });
     }
 
     const contrasenaValida = await bcrypt.compare(contrasena, usuario.contraseña);
     if (!contrasenaValida) {
-      return res.status(401).json({ mensaje: 'Contraseña incorrecta.' });
+      return res.status(401).json({ mensaje: MENSAJES.AUTH.CONTRASENA_INCORRECTA });
     }
 
     if (!usuario.estado) {
-      return res.status(403).json({ mensaje: 'Usuario inhabilitado. Contacte al administrador.' });
+      return res.status(403).json({ mensaje: MENSAJES.AUTH.USUARIO_INHABILITADO });
     }
 
     const token = jwt.sign(
@@ -43,11 +43,40 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
-    res.status(500).json({ mensaje: 'Error del servidor.' });
+    res.status(500).json({ mensaje: MENSAJES.GENERAL.ERROR_INTERNO });
   }
 };
 
-// Solicitar código de recuperación
+// CAMBIAR CONTRASEÑA desde perfil
+const cambiarContrasena = async (req, res) => {
+  try {
+    const { identificacion, contrasenaActual, nuevaContrasena } = req.body;
+
+    if (!identificacion || !contrasenaActual || !nuevaContrasena) {
+      return res.status(400).json({ mensaje: MENSAJES.USUARIO.CAMPOS_OBLIGATORIOS });
+    }
+
+    const usuario = await Usuario.findOne({ identificacion }).select('+contraseña');
+    if (!usuario) {
+      return res.status(404).json({ mensaje: MENSAJES.AUTH.USUARIO_NO_ENCONTRADO });
+    }
+
+    const esValida = await bcrypt.compare(contrasenaActual, usuario.contraseña);
+    if (!esValida) {
+      return res.status(401).json({ mensaje: MENSAJES.AUTH.CONTRASENA_INCORRECTA });
+    }
+
+    usuario.contraseña = await bcrypt.hash(nuevaContrasena, 10);
+    await usuario.save();
+
+    res.json({ mensaje: MENSAJES.AUTH.CONTRASENA_ACTUALIZADA });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ mensaje: MENSAJES.AUTH.ERROR_ACTUALIZAR_CONTRASENA });
+  }
+};
+
+// Solicitar código
 const solicitarCodigoRecuperacion = async (req, res) => {
   try {
     const { correo } = req.body;
@@ -72,7 +101,9 @@ const solicitarCodigoRecuperacion = async (req, res) => {
     }
 
     const codigo = generarCadenaAleatoria(6);
-    const vencimiento = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    const vencimiento = new Date(Date.now() + 10 * 60 * 1000);
+
+    await PasswordReset.deleteMany({ correo });
 
     const nuevoReset = new PasswordReset({ correo, codigo, vencimiento });
     await nuevoReset.save();
@@ -92,7 +123,6 @@ const solicitarCodigoRecuperacion = async (req, res) => {
     );
 
     return res.json({ mensaje: MENSAJES.AUTH.CODIGO_ENVIADO });
-
   } catch (error) {
     console.error('Error al solicitar código de recuperación:', error);
     res.status(500).json({ mensaje: MENSAJES.AUTH.ERROR_SOLICITUD });
@@ -105,20 +135,28 @@ const verificarCodigo = async (req, res) => {
     const { correo, codigo } = req.body;
 
     if (!correo || !codigo) {
-      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_Y_CORREO_OBLIGATORIO });
+      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_OBLIGATORIO });
     }
 
-    const reset = await PasswordReset.findOne({ correo, codigo });
+    const ahora = new Date();
 
-    if (!reset || reset.vencimiento < new Date()) {
-      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_INVALIDO_O_VENCIDO });
+    const reset = await PasswordReset.findOne({
+      correo,
+      codigo,
+      vencimiento: { $gte: ahora }
+    }).sort({ creadoEn: -1 });
+
+    if (!reset) {
+      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_INVALIDO });
     }
 
-    res.json({ mensaje: MENSAJES.AUTH.CODIGO_VALIDO });
-
+    return res.json({
+      ok: true,
+      mensaje: MENSAJES.AUTH.CODIGO_VALIDO
+    });
   } catch (error) {
     console.error('Error al verificar código:', error);
-    res.status(500).json({ mensaje: MENSAJES.AUTH.ERROR_VERIFICACION });
+    return res.status(500).json({ mensaje: MENSAJES.AUTH.ERROR_VERIFICACION });
   }
 };
 
@@ -128,13 +166,13 @@ const restablecerContrasena = async (req, res) => {
     const { correo, codigo, nuevaContrasena } = req.body;
 
     if (!correo || !codigo || !nuevaContrasena) {
-      return res.status(400).json({ mensaje: MENSAJES.AUTH.DATOS_OBLIGATORIOS });
+      return res.status(400).json({ mensaje: MENSAJES.USUARIO.CAMPOS_OBLIGATORIOS });
     }
 
     const reset = await PasswordReset.findOne({ correo, codigo });
 
     if (!reset || reset.vencimiento < new Date()) {
-      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_INVALIDO_O_VENCIDO });
+      return res.status(400).json({ mensaje: MENSAJES.AUTH.CODIGO_INVALIDO });
     }
 
     const usuario = await Usuario.findOne({ correo });
@@ -143,13 +181,12 @@ const restablecerContrasena = async (req, res) => {
     }
 
     usuario.contraseña = await bcrypt.hash(nuevaContrasena, 10);
-    usuario.primerInicio = false; // ya no es primer inicio
+    usuario.primerInicio = false;
     await usuario.save();
 
     await PasswordReset.deleteMany({ correo });
 
     res.json({ mensaje: MENSAJES.AUTH.CONTRASENA_ACTUALIZADA });
-
   } catch (error) {
     console.error('Error al restablecer contraseña:', error);
     res.status(500).json({ mensaje: MENSAJES.AUTH.ERROR_RESTABLECER });
@@ -158,6 +195,7 @@ const restablecerContrasena = async (req, res) => {
 
 module.exports = {
   login,
+  cambiarContrasena,
   solicitarCodigoRecuperacion,
   verificarCodigo,
   restablecerContrasena,

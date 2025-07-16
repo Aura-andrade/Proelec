@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const authController = require('../controllers/authController');
+const { verificarToken } = require('../middlewares/authMiddleware');
+
 
 const {
   login,
   solicitarCodigoRecuperacion,
   verificarCodigo,
-  restablecerContrasena
+  restablecerContrasena,
+  cambiarContrasena
 } = require('../controllers/authController');
 
 // Ruta de inicio de sesión
@@ -19,5 +23,9 @@ router.post('/verificar-codigo', verificarCodigo);
 
 // Restablecer la contraseña
 router.post('/restablecer-contrasena', restablecerContrasena);
+
+// Cambiar contraseña
+
+router.put('/cambiar-contrasena', verificarToken, authController.cambiarContrasena);
 
 module.exports = router;
